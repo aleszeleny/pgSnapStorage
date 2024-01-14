@@ -1,10 +1,32 @@
+-- PostgreSQL Snapshots Storage - snaps
+
 /*
-  Source PostgreSQL instance(s) configuration.
+  TODO: split into separate scripts.
+*/
+
+\set snapsns snaps
+
+
+/*
+  CLEANUP - TEMPORARY
+*/
+
+\c postgres
+DROP DATABASE snaps;
+CREATE DATABASE snaps;
+
+\c snaps
+
+DROP ROLE IF EXISTS snaps_ro;
+DROP ROLE IF EXISTS snaps_rw;
+
+/*
+  END OF CLEANUP
 */
 
 START TRANSACTION;
 
-SET search_path = snap_storage;
+SELECT set_config('search_path', :'snapsns' || ', public',false);
 
 CREATE FUNCTION pg_temp.create_role_if_ne(p_role_name name)
 RETURNS void
@@ -27,9 +49,9 @@ SELECT pg_temp.create_role_if_ne(p_role_name => 'snaps_ro');
 SELECT pg_temp.create_role_if_ne(p_role_name => 'snaps_rw');
 
 -- Create schema for snapshot tables
-CREATE SCHEMA IF NOT EXISTS snap_storage;
-REVOKE USAGE ON SCHEMA snap_storage FROM public;
-GRANT USAGE ON SCHEMA snap_storage TO snaps_ro, snaps_rw;
+CREATE SCHEMA IF NOT EXISTS :snapsns;
+REVOKE ALL ON SCHEMA :snapsns FROM public;
+GRANT USAGE ON SCHEMA :snapsns TO snaps_ro, snaps_rw;
 
 
 CREATE TABLE IF NOT EXISTS snap_instance_cfg (
@@ -45,21 +67,13 @@ CREATE TABLE IF NOT EXISTS snap_instance_cfg (
 CREATE INDEX ON snap_instance_cfg(systemid);
 
 COMMENT ON TABLE snap_instance_cfg IS
-$comment$
-  Configuration table for snapshots data source instances.
-$comment$;
+  'Configuration table for snapshots data source instances.';
 
 COMMENT ON COLUMN snap_instance_cfg.instance_name IS
-$comment$
-  Custom name for the instance (PostgreSQL cluster).
-$comment$;
+  'Custom name for the instance (PostgreSQL cluster).';
 
 COMMENT ON COLUMN snap_instance_cfg.systemid IS
-$comment$
-  System ID, see pg_control_system().
-  Master and slave instances can be identified using
-  systemid.
-$comment$;
+  'System ID, see pg_control_system().';
 
 CREATE OR REPLACE FUNCTION snap_instance_cfg_defaults_trg()
 RETURNS trigger
@@ -87,6 +101,7 @@ CREATE TRIGGER snap_instance_cfg_set_defaults
   FOR EACH ROW
   EXECUTE FUNCTION snap_instance_cfg_defaults_trg();
 
+
 /*
 COMMENT ON COLUMN snap_instance_cfg.systemid_prev IS
 $comment$
@@ -96,4 +111,13 @@ $comment$
 $comment$;
 */
 
+GRANT SELECT ON ALL TABLES IN SCHEMA :snapsns TO snaps_ro;
+
+GRANT INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA :snapsns TO snaps_rw;
+
+
 COMMIT;
+
+/* TESTING ONLY */
+RESET search_path;
+CREATE EXTENSION IF NOT EXISTS pgtap;
