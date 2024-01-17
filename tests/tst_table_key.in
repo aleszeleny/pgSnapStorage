@@ -1,0 +1,2 @@
+SELECT has_unique( :'tap_namespace', :'tap_table_name'
+  , format('Table %I.%I needs an unique constrait.', :'tap_namespace', :'tap_table_name') );

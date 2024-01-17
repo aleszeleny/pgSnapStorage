@@ -1,0 +1,5 @@
+SELECT bag_eq(
+  format('EXECUTE tap_get_tbl_column_names(%L, %L)', :'tap_table_name', :'tap_namespace')
+  , :'tap_table_cols'::text[]
+  , format('%I.%I table columns check, assure they are tested.', :'tap_namespace', :'tap_table_name')
+);

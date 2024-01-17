@@ -10,7 +10,7 @@ START TRANSACTION;
 
 -- SELECT set_config('search_path', :'cfg_ns' || ', public',false);
 
-SELECT plan(19);
+SELECT plan(28);
 
 -- SELECT roles_are(ARRAY[ 'postgres', 'snaps_ro', 'snaps_rw' ],  'Check roles.');
 
@@ -38,6 +38,9 @@ SELECT database_privs_are(
 
 SELECT diag('Schema(s) tests.');
 SELECT schemas_are(ARRAY[ 'public', :'cfg_ns' ], 'Check schemas.');
+
+-- set schema for subsequent tests
+\set tap_namespace :cfg_ns
 
 SELECT schema_privs_are(
     :'cfg_ns', 'public', ARRAY[]::text[]
@@ -90,68 +93,69 @@ SELECT schema_privs_are(
 );
 
 
-SELECT diag('Tables tests.');
+-- #############################################################################
+SELECT diag('Table tests.');
+-- #############################################################################
+
+\set tap_namespace :cfg_ns
+
+PREPARE tap_get_tbl_column_names(name, name) AS
+  SELECT attname
+  FROM pg_catalog.pg_attribute a
+  JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
+  WHERE c.relname = $1
+    AND c.relnamespace = $2::regnamespace::oid
+    AND NOT attisdropped AND attnum > 0;
+
+/*******************************************************************************
+Check expected tables.
+*******************************************************************************/
 SELECT tables_are(
-    :'cfg_ns'
+    :'tap_namespace'
   , ARRAY[ 'system', 'system_tree', 'instance' ]
   , 'Check expected tables.'
 );
 
-SELECT bag_eq(
-    E'SELECT attname
-      FROM pg_catalog.pg_attribute a
-      JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
-      WHERE c.relname = ''system''
-        AND c.relnamespace = ''' || :'cfg_ns' || E'''::regnamespace::oid
-        AND NOT attisdropped AND attnum > 0'
-  , ARRAY[
-      'system_id'
-    , 'systemid'
-    , 'system_name'
-    , 'system_description'
-    , 'lastmod'
-    ]::TEXT[]
-  , format('%I.%I table columns check, assure they are tested.', :'cfg_ns', 'system')
-);
+/*******************************************************************************
+TABLE: snap_cfg.instance
+*******************************************************************************/
+\set tap_table_name system
+\set tap_table_cols '{system_id, systemid, system_name, system_description, lastmod}'
 
-SELECT bag_eq(
-    E'SELECT attname
-      FROM pg_catalog.pg_attribute a
-      JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
-      WHERE c.relname = ''system_tree''
-        AND c.relnamespace = ''' || :'cfg_ns' || E'''::regnamespace::oid
-        AND NOT attisdropped AND attnum > 0'
-  , ARRAY[
-      'system_tree_id'
-    , 'description'
-    , 'ancestor_system_id'
-    , 'descendant_system_id'
-    , 'lastmod'
-    ]::TEXT[]
-  , format('%I.%I table columns check, assure they are tested.', :'cfg_ns', 'system_tree')
-);
+\ir tst_table_columns.in
+\ir tst_table_pkey.in
+\ir tst_table_key.in
 
-SELECT bag_eq(
-    E'SELECT attname
-      FROM pg_catalog.pg_attribute a
-      JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
-      WHERE c.relname = ''instance''
-        AND c.relnamespace = ''' || :'cfg_ns' || E'''::regnamespace::oid
-        AND NOT attisdropped AND attnum > 0'
-  ,
-    ARRAY[
-        'instance_id'
-      , 'system_id'
-      , 'cluster_name'
-      , 'host_addr'
-      , 'listen_port'
-      , 'instance_name'
-      , 'instance_description'
-      , 'registration_time'
-      , 'lastmod'
-    ]::TEXT[]
-  , format('%I.%I table columns check, assure they are tested.', :'cfg_ns', 'instance')
-);
+/*
+********************************************************************************
+TABLE: snap_cfg.instance
+********************************************************************************
+*/
+\set tap_table_name system_tree
+\set tap_table_cols '{system_tree_id, description, ancestor_system_id, descendant_system_id, lastmod}'
+\set tap_uq_cols '{ancestor_system_id, descendant_system_id}'
+
+\ir tst_table_columns.in
+\ir tst_table_pkey.in
+\ir tst_table_key.in
+\ir tst_key_columns.in
+
+SELECT fk_ok( :'tap_namespace', :'tap_table_name','ancestor_system_id', :'tap_namespace',  'system', 'system_id');
+SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'descendant_system_id', :'tap_namespace',  'system', 'system_id');
+
+/*
+********************************************************************************
+TABLE: snap_cfg.instance
+********************************************************************************
+*/
+\set tap_table_name instance
+\set tap_table_cols '{instance_id, system_id, cluster_name, host_addr, listen_port, instance_name, instance_description, registration_time, lastmod}'
+\set tap_uq_cols '{ancestor_system_id, descendant_system_id}'
+
+\ir tst_table_columns.in
+\ir tst_table_pkey.in
+
+SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'system_id', :'tap_namespace',  'system', 'system_id');
 
 SELECT * FROM finish();
 

@@ -1,0 +1,2 @@
+SELECT has_pk( :'tap_namespace', :'tap_table_name'
+  , format('Table %I.%I needs a primary key.', :'tap_namespace', :'tap_table_name') );

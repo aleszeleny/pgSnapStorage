@@ -171,6 +171,7 @@ CREATE TABLE IF NOT EXISTS :cfg_ns.system_tree (
   , ancestor_system_id int NOT NULL REFERENCES :cfg_ns.system(system_id)
   , descendant_system_id int NOT NULL REFERENCES :cfg_ns.system(system_id)
   , lastmod TIMESTAMPTZ NOT NULL DEFAULT now()
+  , CONSTRAINT system_tree_key UNIQUE (ancestor_system_id, descendant_system_id)
 );
 
 CREATE INDEX ON :cfg_ns.system_tree(ancestor_system_id);

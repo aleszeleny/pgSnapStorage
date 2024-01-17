@@ -1,0 +1,2 @@
+SELECT col_is_unique( :'tap_namespace', :'tap_table_name' , :'tap_uq_cols'::name[]
+  , format('Table %I.%I required unique comuns.' , :'tap_namespace' , :'tap_table_name') );
