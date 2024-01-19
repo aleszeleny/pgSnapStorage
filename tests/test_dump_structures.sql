@@ -10,11 +10,9 @@ START TRANSACTION;
 
 -- SELECT set_config('search_path', :'cfg_ns' || ', public',false);
 
-SELECT plan(28);
+SELECT plan(36);
 
--- SELECT roles_are(ARRAY[ 'postgres', 'snaps_ro', 'snaps_rw' ],  'Check roles.');
-
-SELECT diag('Database tests.');
+SELECT diag('Database tests');
 SELECT database_privs_are(
     :'snapsdb', 'snaps_conn', ARRAY['CONNECT', 'TEMPORARY']
   , format('%I should be granted CONNECT and TERMPORARY on db %I.', 'snaps_conn', :'snapsdb')
@@ -35,13 +33,14 @@ SELECT database_privs_are(
   , format('%I should be granted CONNECT and TERMPORARY on db %I.', 'tu_snaps_read', :'snapsdb')
 );
 
+SELECT diag('Schemas tests.');
 
-SELECT diag('Schema(s) tests.');
-SELECT schemas_are(ARRAY[ 'public', :'cfg_ns' ], 'Check schemas.');
+SELECT schemas_are(ARRAY[ 'public', :'cfg_ns', :'data_ns' ], 'Check schemas.');
 
 -- set schema for subsequent tests
 \set tap_namespace :cfg_ns
 
+-- snapshost storage configuration schema
 SELECT schema_privs_are(
     :'cfg_ns', 'public', ARRAY[]::text[]
   , format('%I should not be granted any privilege on schema %I.', 'public', :'cfg_ns')
@@ -92,12 +91,23 @@ SELECT schema_privs_are(
   , format('Role %I should be granted USAGE privilege on schema %I.', 'tu_snaps_read', :'cfg_ns')
 );
 
+-- snapshots data schema
+\set tap_namespace :data_ns
+SELECT schema_privs_are(:'tap_namespace', 'public', ARRAY[]::text[]);
+
+SELECT schema_privs_are(:'tap_namespace', 'snaps_ro_cfg', ARRAY[]::text[]);
+SELECT schema_privs_are(:'tap_namespace', 'snaps_rw_cfg', ARRAY[]::text[]);
+
+SELECT schema_privs_are(:'tap_namespace', 'snaps_ro_data', ARRAY['USAGE']::text[]);
+SELECT schema_privs_are(:'tap_namespace', 'snaps_rw_data', ARRAY['USAGE']::text[]);
+
+SELECT schema_privs_are(:'tap_namespace', 'snaps_ro', ARRAY['USAGE']::text[]);
+SELECT schema_privs_are(:'tap_namespace', 'snaps_rw', ARRAY['USAGE']::text[]);
 
 -- #############################################################################
-SELECT diag('Table tests.');
--- #############################################################################
-
 \set tap_namespace :cfg_ns
+SELECT diag('Table tests for schema ' || :'tap_namespace');
+-- #############################################################################
 
 PREPARE tap_get_tbl_column_names(name, name) AS
   SELECT attname
@@ -112,8 +122,8 @@ Check expected tables.
 *******************************************************************************/
 SELECT tables_are(
     :'tap_namespace'
-  , ARRAY[ 'system', 'system_tree', 'instance' ]
-  , 'Check expected tables.'
+  , ARRAY[ 'system', 'system_tree', 'instance', 'database' ]
+  , 'Check expected tables in schema '|| :'tap_namespace'
 );
 
 /*******************************************************************************
@@ -149,13 +159,28 @@ TABLE: snap_cfg.instance
 ********************************************************************************
 */
 \set tap_table_name instance
-\set tap_table_cols '{instance_id, system_id, cluster_name, host_addr, listen_port, instance_name, instance_description, registration_time, lastmod}'
+\set tap_table_cols '{instance_id, system_id, cluster_name, host_addr, listen_port, instance_name, instance_description, major_version, registration_time, lastmod}'
 \set tap_uq_cols '{ancestor_system_id, descendant_system_id}'
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'system_id', :'tap_namespace',  'system', 'system_id');
+
+-- #############################################################################
+\set tap_namespace :data_ns
+SELECT diag('Table tests for schema ' || :'tap_namespace');
+-- #############################################################################
+
+/*******************************************************************************
+Check expected tables.
+*******************************************************************************/
+SELECT tables_are(
+    :'tap_namespace'
+  , '{snapshot, snapshot_pg_settings, pg_settings}'::name[]
+  , 'Check expected tables in schema '|| :'tap_namespace'
+);
+
 
 SELECT * FROM finish();
 
