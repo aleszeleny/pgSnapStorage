@@ -60,7 +60,7 @@ BEGIN
 END;
 $function$;
 
--- Create role to control connect privilege to snapshost storage database
+-- Create role to control connect privilege to snapshots storage database
 SELECT pg_temp.create_role_if_ne(p_role_name => 'snaps_conn');
 GRANT CONNECT, TEMPORARY ON DATABASE :snapsdb TO snaps_conn;
 REVOKE CONNECT ON DATABASE :snapsdb FROM public;
@@ -76,7 +76,7 @@ SELECT pg_temp.create_role_if_ne(p_role_name => 'snaps_rw_cfg');
 SELECT pg_temp.create_role_if_ne(p_role_name => 'snaps_rw_data');
 
 
--- Create example technical user roles (to emuate application access to data).
+-- Create example technical user roles (to emulate application access to data).
 -- Feel free to set a password for the tu_% roles if you want to use them for an application.
 SELECT pg_temp.create_role_if_ne(p_role_name => 'tu_snaps_cfg'); -- configuration data management role
 ALTER ROLE tu_snaps_cfg WITH LOGIN;
@@ -188,6 +188,7 @@ $function$;
 CREATE TABLE IF NOT EXISTS :cfg_ns.system (
     system_id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY
   , systemid bigint NOT NULL UNIQUE /* remove unique consstraint in the case of an unexpected real-life systemid collision */
+  , pg_major_version int NOT NULL
   , system_name text
   , system_description text
   , lastmod TIMESTAMPTZ NOT NULL DEFAULT pg_catalog.now()
@@ -377,12 +378,12 @@ COMMENT ON COLUMN :data_ns.snapshot.db_stats IS
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-~ pg_settings table                                                   ~
+~ pg_settings table 9.5 - 16                                                   ~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 CREATE TABLE IF NOT EXISTS :data_ns.pg_settings (
-    hash             text NOT NULL PRIMARY KEY
-  , name             text
+    hash             text NOT NULL
+  , name             text NOT NULL
   , setting          text
   , unit             text
   , category         text
@@ -399,6 +400,7 @@ CREATE TABLE IF NOT EXISTS :data_ns.pg_settings (
   , sourcefile       text
   , sourceline       integer
   , pending_restart  boolean
+  , CONSTRAINT pg_settings_pkey PRIMARY KEY (hash)
 );
 
 COMMENT ON TABLE :data_ns.pg_settings IS
@@ -406,8 +408,9 @@ E'pg_settings data snapshots.';
 
 CREATE TABLE IF NOT EXISTS :data_ns.snapshot_pg_settings (
     snapshot_id bigint NOT NULL REFERENCES :data_ns.snapshot(snapshot_id)
+  , name text NOT NULL
   , hash text NOT NULL REFERENCES :data_ns.pg_settings(hash)
-  , CONSTRAINT snapshot_pg_settings_pkey PRIMARY KEY (snapshot_id, hash)
+  , CONSTRAINT snapshot_pg_settings_pkey PRIMARY KEY (snapshot_id, name, hash)
 );
 
 
@@ -426,3 +429,18 @@ COMMIT;
 /* TESTING ONLY */
 RESET search_path;
 CREATE EXTENSION IF NOT EXISTS pgtap;
+
+
+-- basic tests
+INSERT INTO snaps_cfg.system (systemid, pg_major_version, system_name, system_description) SELECT (pg_control_system()).system_identifier, current_setting('server_version_num')::int/10000, current_setting('cluster_name'), version();
+
+INSERT INTO snaps_cfg.instance (system_id, cluster_name, host_addr, listen_port, instance_name, instance_description, major_version) SELECT s.system_id, current_setting('cluster_name'), inet_server_addr(), current_setting('port')::int, 'instance One', 'usually master', 'remove major version from here'  FROM snaps_cfg.system AS s WHERE system_id = (SELECT min(system_id) FROM snaps_cfg.system);
+
+insert into snaps_cfg.database ( instance_id, dbname, connect_string) select i.instance_id, 'bench', 'postgresql://127.0.0.1:5432/bench' FROM snaps_cfg.instance i where i.instance_id = (select min(instance_id) from snaps_cfg.instance);
+
+
+--- fix it
+insert into snaps_data.pg_settings SELECT md5(ps::text), ps.* FROM pg_catalog.pg_settings ps ON CONFLICT (hash) DO NOTHING;
+
+
+with q_hash(hash) AS (select md5(string_agg('', (ps::text) ORDER BY name)) from pg_catalog.pg_settings ps) insert into snaps_data.pg_settings  SELECT qh.hash, ps.* from pg_catalog.pg_settings ps cross join q_hash AS qh ON CONFLICT (hash) DO NOTHING;

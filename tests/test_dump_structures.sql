@@ -10,7 +10,7 @@ START TRANSACTION;
 
 -- SELECT set_config('search_path', :'cfg_ns' || ', public',false);
 
-SELECT plan(36);
+SELECT plan(50);
 
 SELECT diag('Database tests');
 SELECT database_privs_are(
@@ -40,7 +40,7 @@ SELECT schemas_are(ARRAY[ 'public', :'cfg_ns', :'data_ns' ], 'Check schemas.');
 -- set schema for subsequent tests
 \set tap_namespace :cfg_ns
 
--- snapshost storage configuration schema
+-- snapshots storage configuration schema
 SELECT schema_privs_are(
     :'cfg_ns', 'public', ARRAY[]::text[]
   , format('%I should not be granted any privilege on schema %I.', 'public', :'cfg_ns')
@@ -130,11 +130,13 @@ SELECT tables_are(
 TABLE: snap_cfg.instance
 *******************************************************************************/
 \set tap_table_name system
-\set tap_table_cols '{system_id, systemid, system_name, system_description, lastmod}'
+\set tap_table_cols '{system_id, systemid, pg_major_version, system_name, system_description, lastmod}'
+\set tap_uq_cols '{systemid}'
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
 \ir tst_table_key.in
+\ir tst_key_columns.in
 
 /*
 ********************************************************************************
@@ -160,12 +162,24 @@ TABLE: snap_cfg.instance
 */
 \set tap_table_name instance
 \set tap_table_cols '{instance_id, system_id, cluster_name, host_addr, listen_port, instance_name, instance_description, major_version, registration_time, lastmod}'
-\set tap_uq_cols '{ancestor_system_id, descendant_system_id}'
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'system_id', :'tap_namespace',  'system', 'system_id');
+
+/*
+********************************************************************************
+TABLE: snap_cfg.database
+********************************************************************************
+*/
+\set tap_table_name database
+\set tap_table_cols '{database_id, instance_id, collect_cluster, collect_db, dbname, connect_string, database_description, registration_time, lastmod}'
+
+\ir tst_table_columns.in
+\ir tst_table_pkey.in
+
+SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'instance_id', :'tap_namespace',  'instance', 'instance_id');
 
 -- #############################################################################
 \set tap_namespace :data_ns
@@ -181,6 +195,45 @@ SELECT tables_are(
   , 'Check expected tables in schema '|| :'tap_namespace'
 );
 
+/*
+********************************************************************************
+TABLE: snaps_data.snapshot
+********************************************************************************
+*/
+\set tap_table_name snapshot
+\set tap_table_cols '{snapshot_id, snaptime, database_id, cluster_stats, db_stats}'
+\set tap_uq_cols '{database_id, snaptime}'
+
+\ir tst_table_columns.in
+\ir tst_table_pkey.in
+\ir tst_key_columns.in
+
+SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'database_id', :'cfg_ns',  'database', 'database_id');
+
+/*
+********************************************************************************
+TABLE: snaps_data.pg_settings
+********************************************************************************
+*/
+\set tap_table_name pg_settings
+\set tap_table_cols '{hash, name, setting, unit, category, short_desc, extra_desc, context, vartype, source, min_val, max_val, enumvals, boot_val, reset_val, sourcefile, sourceline, pending_restart}'
+
+\ir tst_table_columns.in
+\ir tst_table_pkey.in
+
+/*
+********************************************************************************
+TABLE: snaps_data.snapshot_pg_settings
+********************************************************************************
+*/
+\set tap_table_name snapshot_pg_settings
+\set tap_table_cols '{snapshot_id, name, hash}'
+
+\ir tst_table_columns.in
+\ir tst_table_pkey.in
+
+SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'snapshot_id', :'tap_namespace',  'snapshot', 'snapshot_id');
+SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'hash', :'tap_namespace',  'pg_settings', 'hash');
 
 SELECT * FROM finish();
 

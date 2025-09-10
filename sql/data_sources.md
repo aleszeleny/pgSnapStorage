@@ -7,7 +7,7 @@
   * `SELECT current_setting('server_version_num')`
   * `SELECT current_setting('server_version_num')::int/10000 as major_version, current_setting('server_version_num')::int%10000 as minor_version`
 * slave instance: `pg_is_in_recovery()`
-* staistics data `pg_stat_%` system views
+* statistics data `pg_stat_%` system views
 * database block size `pg_control_init()`
 * instance start time `pg_postmaster_start_time ()`
 * Config load time `pg_conf_load_time ()`
