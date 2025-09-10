@@ -8,6 +8,7 @@ Install packages `pgtap`, `postgresql-17-pgtap`
 * tests are executed using pg_prove utility
 
 ### Example
+
 _pgSnapStorage_ in installed in database `snaps_db`, instead of command line argument `PGDATABASE` environment variable might be used as well.
 
 ```sh
