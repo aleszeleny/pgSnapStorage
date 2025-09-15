@@ -370,10 +370,10 @@ COMMENT ON COLUMN :data_ns.snapshot.database_id IS
 'Reference to database used to collect snapshot data.';
 
 COMMENT ON COLUMN :data_ns.snapshot.cluster_stats IS
-'Cluster (instance) wide statitic were collected.';
+'Cluster (instance) wide statistic were collected.';
 
 COMMENT ON COLUMN :data_ns.snapshot.db_stats IS
-'Database wide statitic were collected.';
+'Database wide statistic were collected.';
 
 
 /*
