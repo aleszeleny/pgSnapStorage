@@ -1,0 +1,7 @@
+-- Test NOT NULL constraints for system table
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'systemid'
+  , format('Column %I.%I.systemid should be NOT NULL', :'tap_namespace', :'tap_table_name') );
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'pg_major_version'
+  , format('Column %I.%I.pg_major_version should be NOT NULL', :'tap_namespace', :'tap_table_name') );
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'lastmod'
+  , format('Column %I.%I.lastmod should be NOT NULL', :'tap_namespace', :'tap_table_name') );

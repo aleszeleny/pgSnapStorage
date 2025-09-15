@@ -1,0 +1,9 @@
+-- Test NOT NULL constraints for snapshot table
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'snaptime'
+  , format('Column %I.%I.snaptime should be NOT NULL', :'tap_namespace', :'tap_table_name') );
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'database_id'
+  , format('Column %I.%I.database_id should be NOT NULL', :'tap_namespace', :'tap_table_name') );
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'cluster_stats'
+  , format('Column %I.%I.cluster_stats should be NOT NULL', :'tap_namespace', :'tap_table_name') );
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'db_stats'
+  , format('Column %I.%I.db_stats should be NOT NULL', :'tap_namespace', :'tap_table_name') );

@@ -1,0 +1,15 @@
+-- Test NOT NULL constraints for database table
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'instance_id'
+  , format('Column %I.%I.instance_id should be NOT NULL', :'tap_namespace', :'tap_table_name') );
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'collect_cluster'
+  , format('Column %I.%I.collect_cluster should be NOT NULL', :'tap_namespace', :'tap_table_name') );
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'collect_db'
+  , format('Column %I.%I.collect_db should be NOT NULL', :'tap_namespace', :'tap_table_name') );
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'dbname'
+  , format('Column %I.%I.dbname should be NOT NULL', :'tap_namespace', :'tap_table_name') );
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'connect_string'
+  , format('Column %I.%I.connect_string should be NOT NULL', :'tap_namespace', :'tap_table_name') );
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'registration_time'
+  , format('Column %I.%I.registration_time should be NOT NULL', :'tap_namespace', :'tap_table_name') );
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'lastmod'
+  , format('Column %I.%I.lastmod should be NOT NULL', :'tap_namespace', :'tap_table_name') );

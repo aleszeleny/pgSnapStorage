@@ -384,7 +384,7 @@ COMMENT ON COLUMN :data_ns.snapshot.db_stats IS
 CREATE TABLE IF NOT EXISTS :data_ns.pg_settings (
     hash             text NOT NULL
   , name             text NOT NULL
-  , setting          text
+  , setting          text NOT NULL
   , unit             text
   , category         text
   , short_desc       text

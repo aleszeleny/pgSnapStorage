@@ -10,7 +10,7 @@ START TRANSACTION;
 
 -- SELECT set_config('search_path', :'cfg_ns' || ', public',false);
 
-SELECT plan(50);
+SELECT plan(78);
 
 SELECT diag('Database tests');
 SELECT database_privs_are(
@@ -137,6 +137,7 @@ TABLE: snap_cfg.instance
 \ir tst_table_pkey.in
 \ir tst_table_key.in
 \ir tst_key_columns.in
+\ir tst_system_notnull.in
 
 /*
 ********************************************************************************
@@ -151,6 +152,7 @@ TABLE: snap_cfg.instance
 \ir tst_table_pkey.in
 \ir tst_table_key.in
 \ir tst_key_columns.in
+\ir tst_system_tree_notnull.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name','ancestor_system_id', :'tap_namespace',  'system', 'system_id');
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'descendant_system_id', :'tap_namespace',  'system', 'system_id');
@@ -165,6 +167,7 @@ TABLE: snap_cfg.instance
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
+\ir tst_instance_notnull.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'system_id', :'tap_namespace',  'system', 'system_id');
 
@@ -178,6 +181,7 @@ TABLE: snap_cfg.database
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
+\ir tst_database_notnull.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'instance_id', :'tap_namespace',  'instance', 'instance_id');
 
@@ -207,6 +211,7 @@ TABLE: snaps_data.snapshot
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
 \ir tst_key_columns.in
+\ir tst_snapshot_notnull.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'database_id', :'cfg_ns',  'database', 'database_id');
 
@@ -220,6 +225,7 @@ TABLE: snaps_data.pg_settings
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
+\ir tst_pg_settings_notnull.in
 
 /*
 ********************************************************************************
@@ -231,6 +237,7 @@ TABLE: snaps_data.snapshot_pg_settings
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
+\ir tst_snapshot_pg_settings_notnull.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'snapshot_id', :'tap_namespace',  'snapshot', 'snapshot_id');
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'hash', :'tap_namespace',  'pg_settings', 'hash');
