@@ -132,12 +132,13 @@ TABLE: snap_cfg.instance
 \set tap_table_name system
 \set tap_table_cols '{system_id, systemid, pg_major_version, system_name, system_description, lastmod}'
 \set tap_uq_cols '{systemid}'
+\set tap_notnull_cols '{systemid, pg_major_version, lastmod}'
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
 \ir tst_table_key.in
 \ir tst_key_columns.in
-\ir tst_system_notnull.in
+\ir tst_table_notnull.in
 
 /*
 ********************************************************************************
@@ -147,12 +148,13 @@ TABLE: snap_cfg.instance
 \set tap_table_name system_tree
 \set tap_table_cols '{system_tree_id, description, ancestor_system_id, descendant_system_id, lastmod}'
 \set tap_uq_cols '{ancestor_system_id, descendant_system_id}'
+\set tap_notnull_cols '{ancestor_system_id, descendant_system_id, lastmod}'
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
 \ir tst_table_key.in
 \ir tst_key_columns.in
-\ir tst_system_tree_notnull.in
+\ir tst_table_notnull.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name','ancestor_system_id', :'tap_namespace',  'system', 'system_id');
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'descendant_system_id', :'tap_namespace',  'system', 'system_id');
@@ -164,10 +166,11 @@ TABLE: snap_cfg.instance
 */
 \set tap_table_name instance
 \set tap_table_cols '{instance_id, system_id, cluster_name, host_addr, listen_port, instance_name, instance_description, major_version, registration_time, lastmod}'
+\set tap_notnull_cols '{system_id, cluster_name, listen_port, registration_time, lastmod}'
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
-\ir tst_instance_notnull.in
+\ir tst_table_notnull.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'system_id', :'tap_namespace',  'system', 'system_id');
 
@@ -178,10 +181,11 @@ TABLE: snap_cfg.database
 */
 \set tap_table_name database
 \set tap_table_cols '{database_id, instance_id, collect_cluster, collect_db, dbname, connect_string, database_description, registration_time, lastmod}'
+\set tap_notnull_cols '{instance_id, collect_cluster, collect_db, dbname, connect_string, registration_time, lastmod}'
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
-\ir tst_database_notnull.in
+\ir tst_table_notnull.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'instance_id', :'tap_namespace',  'instance', 'instance_id');
 
@@ -207,11 +211,12 @@ TABLE: snaps_data.snapshot
 \set tap_table_name snapshot
 \set tap_table_cols '{snapshot_id, snaptime, database_id, cluster_stats, db_stats}'
 \set tap_uq_cols '{database_id, snaptime}'
+\set tap_notnull_cols '{snaptime, database_id, cluster_stats, db_stats}'
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
 \ir tst_key_columns.in
-\ir tst_snapshot_notnull.in
+\ir tst_table_notnull.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'database_id', :'cfg_ns',  'database', 'database_id');
 
@@ -222,10 +227,11 @@ TABLE: snaps_data.pg_settings
 */
 \set tap_table_name pg_settings
 \set tap_table_cols '{hash, name, setting, unit, category, short_desc, extra_desc, context, vartype, source, min_val, max_val, enumvals, boot_val, reset_val, sourcefile, sourceline, pending_restart}'
+\set tap_notnull_cols '{hash, name, setting}'
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
-\ir tst_pg_settings_notnull.in
+\ir tst_table_notnull.in
 
 /*
 ********************************************************************************
@@ -234,10 +240,11 @@ TABLE: snaps_data.snapshot_pg_settings
 */
 \set tap_table_name snapshot_pg_settings
 \set tap_table_cols '{snapshot_id, name, hash}'
+\set tap_notnull_cols '{snapshot_id, name, hash}'
 
 \ir tst_table_columns.in
 \ir tst_table_pkey.in
-\ir tst_snapshot_pg_settings_notnull.in
+\ir tst_table_notnull.in
 
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'snapshot_id', :'tap_namespace',  'snapshot', 'snapshot_id');
 SELECT fk_ok( :'tap_namespace', :'tap_table_name', 'hash', :'tap_namespace',  'pg_settings', 'hash');

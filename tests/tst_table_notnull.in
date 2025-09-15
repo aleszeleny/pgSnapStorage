@@ -1,0 +1,3 @@
+-- Test NOT NULL constraints for each column in the array
+SELECT col_not_null( :'tap_namespace', :'tap_table_name', unnest(:'tap_notnull_cols'::name[])
+  , format('Column %I.%I.%I should be NOT NULL', :'tap_namespace', :'tap_table_name', unnest(:'tap_notnull_cols'::name[])) );

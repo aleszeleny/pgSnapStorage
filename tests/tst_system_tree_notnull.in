@@ -1,7 +1,0 @@
--- Test NOT NULL constraints for system_tree table
-SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'ancestor_system_id'
-  , format('Column %I.%I.ancestor_system_id should be NOT NULL', :'tap_namespace', :'tap_table_name') );
-SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'descendant_system_id'
-  , format('Column %I.%I.descendant_system_id should be NOT NULL', :'tap_namespace', :'tap_table_name') );
-SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'lastmod'
-  , format('Column %I.%I.lastmod should be NOT NULL', :'tap_namespace', :'tap_table_name') );

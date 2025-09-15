@@ -1,7 +1,0 @@
--- Test NOT NULL constraints for snapshot_pg_settings table
-SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'snapshot_id'
-  , format('Column %I.%I.snapshot_id should be NOT NULL', :'tap_namespace', :'tap_table_name') );
-SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'name'
-  , format('Column %I.%I.name should be NOT NULL', :'tap_namespace', :'tap_table_name') );
-SELECT col_not_null( :'tap_namespace', :'tap_table_name', 'hash'
-  , format('Column %I.%I.hash should be NOT NULL', :'tap_namespace', :'tap_table_name') );
